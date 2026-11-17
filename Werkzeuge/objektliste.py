@@ -51,7 +51,7 @@ def main():
     flugplatz = [Polygon(utm(e["geometry"])) for e in osm_elemente("edaz_aeroway.json")
                  if e.get("tags", {}).get("aeroway") == "aerodrome" and ist_geschlossen(e["geometry"])][0]
     gebiet = flugplatz.buffer(eg.PUFFER)
-    flaechen, _ = eg.lies_gebaeude(gebiet)
+    flaechen, _, _ = eg.lies_gebaeude(gebiet)
     grundrisse = shapely.union_all([Polygon(r[:, :2]).buffer(0) for a, r, i, g in flaechen if a == "RoofSurface"]).buffer(1.0)
     H = lade_raster()
     raus, angepasst, behalten = [], [], []

@@ -1,6 +1,6 @@
 """Baut aus LGB-DOP20-Kacheln die Textur eines Condor-Patches (Nord oben, Ost rechts).
 
-Aufruf: python patch_textur.py <spalte> <zeile> <pixel> <ausgabe.png>
+Aufruf: python patch_textur.py <pixel> <ausgabeordner> <spalte,zeile> [<spalte,zeile> ...]  (alle Patches in einer Reihe)
 Die Farben werden an die bisherige Patch-Textur angepasst, damit an den Rändern keine harten Kanten entstehen.
 """
 import glob, os, re, sys, zipfile

@@ -10,8 +10,9 @@ EDAZ Fotos/
 Daten/
 Backup/
 
-# Lokale Werkzeug-Einstellungen
+# Lokale Werkzeug-Einstellungen und Beschreibung dieses Rechners
 .claude/
+LOKAL.md
 
 # Python
 __pycache__/

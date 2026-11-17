@@ -2,39 +2,41 @@
 
 Sammelliste für alle, die mitarbeiten wollen. Stand: 17.11.2026. Details zu den einzelnen Punkten stehen in `PROJEKT.md` (Bauliste, Offene Punkte, Erkenntnisse) und `ARBEITSABLAUF.md` (Reihenfolge der Skripte). Wer einen Punkt anfängt, trägt das bitte hier ein (Name und Datum), damit niemand doppelt arbeitet.
 
-## 1. Verteilung und Rechtliches
-
-1. **Anfrage an die Autoren von EastGermany2** (Felix Hupfeld, Michel Bernard, Claude Simonneaud), ob die Weitergabe der geänderten Teile in Ordnung ist. Läuft, noch keine Antwort.
-2. **Quellenangabe für die Brandenburger Geodaten:** Wortlaut in der BbgGeoNutzV prüfen. Bisher „© GeoBasis-DE/LGB, dl-de/by-2-0“.
-3. **Lizenz für Code und Doku festlegen.** Ohne Lizenz darf niemand den Code verwenden oder weitergeben.
-4. **Release-Paket bauen:** Ein Zip mit den eigenen, selbst erzeugten Dateien (Texturen, Höhenkacheln, Flugplatz- und Autogen-Dateien, Waldkarten) und einer Prüfsummenliste, als GitHub-Release.
-5. **Installer schreiben:** Legt `EastGermany3` neben `EastGermany2` an (Hardlinks statt 16 GB Kopie, ungetestet), spielt das Release ein und erzeugt die abgeleiteten Dateien (`.obj`, `.apt`, Hash-Zeilen in `.fha` und `.oha`, `Drevesa.dds`) aus der EG2 des Mitglieds. Prüft vorher, dass die EG2 unverändert ist.
-
-## 2. Lücken im Repo
+## 1. Lücken im Repo
 
 1. Download-Skript für die LGB-Kacheln (Dateinamen siehe `ARBEITSABLAUF.md`).
 2. Die OSM-Auszüge (`Daten\OSM`) ins Repo, mit ODbL-Quellenangabe.
-3. Die Hilfsskripte zur Steuerung von Landscape Editor und ObjectEditor ins Repo.
-4. Klären und beschreiben, wie `Airports\Schoenhagen.grs` (40 MB) entsteht.
-5. **Fehler beheben:** `objektliste.py` Zeile 54 erwartet zwei Rückgabewerte von `lies_gebaeude`, es sind drei.
-6. Link zum Condor Landscape Toolkit in `ARBEITSABLAUF.md` ergänzen.
-7. Veralteten Aufrufhinweis im Kopf von `patch_textur.py` korrigieren.
-8. Prüfen, was `scenerycheck3.exe` zur Landschaft meldet, und das Ergebnis festhalten.
+3. Klären und beschreiben, wie `Airports\Schoenhagen.grs` (40 MB) entsteht.
+4. Link zum Condor Landscape Toolkit in `ARBEITSABLAUF.md` ergänzen.
+5. Prüfen, was `scenerycheck3.exe` zur Landschaft meldet, und das Ergebnis festhalten.
+6. Blender-Vorschau: Die Kamera „vorfeld“ sitzt auf Dachhöhe und muss tiefer.
 
-## 3. In Condor ansehen und prüfen
+## 2. In Condor ansehen und prüfen
 
-1. Neue Hallen, Hangartore und den Geflügelhof Löwendorf samt Landwerk Ahrensdorf im Flug ansehen (Maße der Silos und Lüfter sind geschätzt).
+1. Klären, ob Condor die Höhenkacheln `.tr3f` mit 6- oder 4-stelligem Namen liest, dann die doppelten Dateien entfernen.
 2. Prüfen, ob Condor eigene Meshes (z. B. aus DOM und DOP20) als Landschaftsobjekte akzeptiert, und ob die Dateiprüfung bei Online-Flügen geänderte Spieldateien bemängelt.
+3. Den Start des Landscape Editors durch `steuerung/landscape_editor.py start` testen, wenn der Editor noch nicht läuft (bisher nur mit laufendem Editor getestet).
 
-## 4. Inhalte für EDAZ
+## 3. Inhalte für EDAZ
 
 Die vollständige Liste steht im Abschnitt „Bauliste EDAZ“ in `PROJEKT.md`. Offen sind unter anderem:
 
 1. Weitere Gebäudearten: Tower-Komplex in Kalksandstein, Hangar P1 mit Rolltoren.
 2. Denkmäler (Do 27 im Zebra-Look, Schulgleiter auf Mast) und Umgebung (Baumreihen, Teich, Zäune).
-3. Eigene Fotos vom Platz (frontal, bedeckter Himmel). Sie sind die beste Quelle für Fassaden.
-4. Fassaden näher an die Fotos bringen, zum Beispiel Hangar-Tore über die ganze Seite. Eigene Texturen dafür, keine aus fremden Quellen.
+3. Eigene Fotos vom Platz (frontal, bedeckter Himmel). Sie sind die beste Quelle für Fassaden. Dazu Fotos vom Geflügelhof Löwendorf (Giebel, Silos), dessen Silos und Lüfter bisher geschätzt sind.
+4. Die Commons-Fotos zum Flugplatz von Hand laden (der automatische Download scheiterte am Rate-Limit), mit Urheber und Lizenz.
 5. Vorfeldmarkierungen ins Bodenluftbild.
+
+## 4. Orientierungspunkte und Umgebung
+
+Wunschliste für die Landschaft rund um EDAZ, vor allem Dinge, die man aus dem Segelflugzeug zur Orientierung nutzt:
+
+1. Mehr Orientierungspunkte als 3D-Objekte: Sandgrube, Aussichtsturm, Windräder mit korrekten Positionen und weitere markante Punkte.
+2. Mehr Dörfer als LoD2-Autogen, vor allem südlich von EDAZ sowie Luckenwalde und Trebbin (bisher nur Schönhagen, Ahrensdorf und der Geflügelhof Löwendorf).
+3. Straßen besser darstellen.
+4. Solarfelder.
+5. Sanddüne westlich von Luckenwalde.
+6. Sperenberg. Was dort genau dargestellt werden soll, ist noch festzulegen.
 
 ## 5. Karte erweitern
 
@@ -45,3 +47,4 @@ Die vollständige Liste steht im Abschnitt „Bauliste EDAZ“ in `PROJEKT.md`. 
 
 1. **Mehr Wolkenvariation:** Es gibt nur 9 Wolkenmodelle und einen Textur-Atlas, und Wolken wirken nur global (nicht pro Landschaft). Siehe „Wolken und Shader“ in `PROJEKT.md`.
 2. **Shader-Änderungen:** Condor lädt `Effects\fx\<Name>.fx` im Klartext, der Originalquelltext liegt aber nicht vor.
+3. **Weitergabe der gebauten Daten:** Ein Release-Paket mit den eigenen Dateien (Texturen, Höhenkacheln, Flugplatz-, Autogen-Dateien, Waldkarten) und ein Installer, der `EastGermany3` neben `EastGermany2` anlegt (Hardlinks, ungetestet) und die abgeleiteten Dateien (`.obj`, `.apt`, Hash-Zeilen in `.fha` und `.oha`, `Drevesa.dds`) aus der EG2 des Mitglieds erzeugt. Aktuell nur in der Gruppe genutzt, daher zurückgestellt. Die Daten kämen in ein eigenes Repo oder ein Release, nicht in dieses Repo (Größe etwa 275 MB).
