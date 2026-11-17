@@ -1,0 +1,18 @@
+# Condor-Programme und Toolkit (nicht von uns)
+CLT/
+
+# Fremde Dokumentation und Referenzmaterial
+*.pdf
+Referenz/
+EDAZ Fotos/
+
+# Große, per Skript neu ladbare Daten und lokale Sicherungen
+Daten/
+Backup/
+
+# Lokale Werkzeug-Einstellungen
+.claude/
+
+# Python
+__pycache__/
+*.pyc
