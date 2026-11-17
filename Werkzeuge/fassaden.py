@@ -162,12 +162,12 @@ def blech(seed=2, variante="hangar", luefter=False):
 
 
 def silo(seed=4):
-    """Verzinkter Silo: senkrechte Bahnen 1,2 m, Ringstöße alle 0,8 m, Laufspuren."""
+    """Verzinkter Silo: 6 senkrechte Bahnen je Kachel (1,33 m), Ringstöße alle 0,8 m, Laufspuren; u-kachelbar."""
     rng = np.random.default_rng(seed)
     ppm = PX / SILO_M
     img = np.empty((PX, PX, 3), np.float32)
     img[:] = np.array((168, 172, 170), np.float32)
-    bahn = (np.arange(PX) / ppm // 1.2).astype(int)
+    bahn = (np.arange(PX) * 6 // PX).astype(int)
     img *= rng.uniform(0.93, 1.07, bahn.max() + 1).astype(np.float32)[bahn][None, :, None]
     ring = (np.arange(PX) / ppm) % 0.8 < 0.04
     img[ring] *= 0.75

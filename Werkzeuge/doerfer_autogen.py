@@ -36,7 +36,8 @@ GRUPPEN = {"Schoenhagen": ([(373426.0, 5786222.0)], 600.0), "Ahrensdorf": ([(374
            "Loewendorf": ([(375540.0, 5784412.0), (375615.0, 5784678.0)], 150.0)}
 STALL_MIN_FLAECHE, STALL_MIN_LAENGE = 800.0, 60.0
 SILO_R, SILO_H, SILO_KEGEL, SILO_ABSTAND, SILO_VOR = 1.2, 7.5, 1.8, 3.0, 3.0
-GIEBEL_BREITE = (9.0, 16.0)  # nur Stallgiebel dieser Breite bekommen Lüfter/Silos (nicht die Verbindungsbauten)
+GIEBEL_BREITE = (9.0, 16.0)  # nur Stallgiebel dieser Breite bekommen Silos (nicht die Verbindungsbauten)
+FIRST_MIN = 4.0  # Giebelstücke mit Lüftern reichen mindestens so hoch über den Boden (Ställe 4,7 m, Verbinder ~3 m)
 CLUSTER_PUFFER = 40.0
 PATCHES = [(40, 39), (39, 39)]
 DACH_PX, DACH_RES = 4096, 0.2
@@ -104,8 +105,10 @@ def giebel_von(ring, i, boden_hoehen, gid):
         return None
     if not (np.abs(ring[:, 2][:, None] - boden_hoehen[gid][None, :]).min(1) < 0.1).any():
         return None
-    mitte = ring[:, :2].mean(0)
-    return "nord" if mitte[1] > i["grundriss"].centroid.y else "sued"
+    if achse[1] < 0:  # Achse zeigt nach Norden
+        achse = -achse
+    c = i["grundriss"].centroid
+    return "nord" if (ring[:, :2].mean(0) - [c.x, c.y]) @ achse > 0 else "sued"
 
 
 def stallgiebel(fl_geb, i, boden_hoehen, gid):
@@ -126,15 +129,18 @@ def stallgiebel(fl_geb, i, boden_hoehen, gid):
         for teil in shapely.get_parts(shapely.unary_union([l.buffer(0.3) for l in linien])):
             ringe = [r for r, l in liste if l is not None and teil.intersects(l)]
             punkte = np.vstack([r[:, :2] for r in ringe])
-            nh = sum(eg.newell(r)[:2] for r in ringe)
-            aussen = nh / np.linalg.norm(nh)
+            # Achsrichtung des Stalls statt Summe der Ringnormalen (einzelne LoD2-Ringe sind falsch herum)
+            aussen, _, _ = achsen(i["grundriss"])
+            if (aussen[1] < 0) == (seite == "nord"):
+                aussen = -aussen
             entlang = np.array([-aussen[1], aussen[0]])
             s = punkte @ entlang
             breite = s.max() - s.min()
             mitte = punkte[np.argmin(s)] + entlang * (breite / 2)
             mitte = mitte - aussen * ((mitte - punkte.mean(0)) @ aussen)  # auf die Wandebene
-            if GIEBEL_BREITE[0] <= breite <= GIEBEL_BREITE[1]:
-                out.append((seite, mitte, aussen, breite, {id(r) for r in ringe}))
+            if i["grundriss"].contains(Point(*(mitte + 0.5 * aussen))):
+                continue  # Außenrichtung unklar: lieber keine Silos/Lüfter-Ursprung als falsche
+            out.append((seite, mitte, aussen, breite, {id(r) for r in ringe}))
     return out
 
 
@@ -148,7 +154,7 @@ def silos(mitte, aussen, gel):
         zb = float(gel(c[0], c[1])) - 0.5
         zt = zb + 0.5 + SILO_H
         rand = np.c_[c[0] + SILO_R * np.cos(w), c[1] + SILO_R * np.sin(w)]
-        u = w * SILO_R / fs.SILO_M
+        u = w / (2 * np.pi) * max(1, round(2 * np.pi * SILO_R / fs.SILO_M))  # ganze Kacheln um den Umfang
         v = lambda z: np.clip((zb + fs.SILO_M - z) / fs.SILO_M, 0.0, 0.999)
         for a in range(16):
             p0, p1 = [*rand[a], zb], [*rand[a + 1], zb]
@@ -158,7 +164,7 @@ def silos(mitte, aussen, gel):
                 out.append((np.array(tri), uv(tri, uu)))
             spitze = [c[0], c[1], zt + SILO_KEGEL]
             tri = (p3, p2, spitze)
-            out.append((np.array(tri), np.c_[(u[a], u[a + 1], (u[a] + u[a + 1]) / 2), (0.02, 0.02, 0.0)]))
+            out.append((np.array(tri), np.c_[(u[a], u[a + 1], (u[a] + u[a + 1]) / 2), (0.08, 0.08, 0.05)]))
     return out
 
 
@@ -193,9 +199,10 @@ def dachbild(flaechen):
     return bild, w0, n0, DACH_PX * res
 
 
-def waende(ring, innen, gid, typ, boden_hoehen, gel, grundriss, zaehler, blech="blech_gewerbe"):
+def waende(ring, innen, gid, typ, boden_hoehen, gel, grundriss, zaehler, blech="blech_gewerbe", ursprung=None):
     """Dreiecke einer LoD2-Wand mit Wandart und UV (v nach unten), wie edaz_gebaeude.main ohne Tore.
-    blech: Texturschlüssel für Hallenwände (blech_stall, blech_gewerbe, blech_luefter)."""
+    blech: Texturschlüssel für Hallenwände (blech_stall, blech_gewerbe, blech_luefter).
+    ursprung: gemeinsamer Punkt für u bei Wänden, die LoD2 in Stücke teilt (Stallgiebel)."""
     ring = ring.copy()
     nh = eg.newell(ring)[:2]
     if np.linalg.norm(nh) > 1e-6:  # Wand zeigt ins eigene Gebäude (falsch orientierter LoD2-Ring) -> umdrehen
@@ -218,6 +225,8 @@ def waende(ring, innen, gid, typ, boden_hoehen, gel, grundriss, zaehler, blech="
     richtung = np.array([-nh[1], nh[0]]) / (np.linalg.norm(nh) + 1e-9)
     s = (ring[:, :2] - ring[0, :2]) @ richtung
     s_min, laenge = s.min(), s.max() - s.min()
+    if ursprung is not None:  # u ab dem gemeinsamen Ursprung (nur Blechtexturen, die nicht auf die Wandlänge gestreckt werden)
+        s_min = (np.asarray(ursprung) - ring[0, :2]) @ richtung
     ziel_unten, ziel_oben, z_teil = (blech, blech, None) if typ.startswith("halle") else ("putz", "putz", None)
     if typ == "fassade" and trauf > 0 and laenge >= 2.0:
         reihen = int((trauf - fs.FENSTER[1] - 0.2) // fs.GESCHOSS) + 1
@@ -295,15 +304,25 @@ def main():
         schreibe_dds(dach, os.path.join(ZIEL, dach_tex))
         print(f"  Dachtextur {DACH_PX} px, {breite / DACH_PX:.2f} m/px")
         sammel = {p: {"dach": [], **{w: [] for w in WAND}} for p in PATCHES}
-        sammel_patch_silo = {}
-        luefter_ringe = set()
+        luefter_ringe, u_ursprung = set(), {}
+        grund_gruppe = shapely.unary_union([info[g]["grundriss"] for g in ids])
         for g in stall:
-            for seite, mitte, aussen, breite, ringe in stallgiebel([f for f in fl if f[3] == g], info[g], boden, g):
-                if seite == "sued":
-                    luefter_ringe |= ringe; zaehler["luefter"] += 1
-                else:
-                    sammel_silo = sammel_patch_silo.setdefault(patch[g], [])
-                    sammel_silo += silos(mitte, aussen, gel); zaehler["silogruppen"] += 1
+            # Lüfter: Südgiebel-Stücke, die bis über FIRST_MIN reichen (die flachen Verbindungsbauten bleiben ohne)
+            for art, ring, innen, gg in fl:
+                if gg != g or art != "WallSurface" or giebel_von(ring, info[g], boden, g) != "sued":
+                    continue
+                if ring[:, 2].max() - boden[g].min() >= FIRST_MIN:
+                    luefter_ringe.add(id(ring)); zaehler["luefter"] += 1
+            for seite, mitte, aussen, breite_g, ringe in stallgiebel([f for f in fl if f[3] == g], info[g], boden, g):
+                for r in ringe:  # Giebelstücke teilen den u-Ursprung, damit Lüfter an der Teilungsfuge durchlaufen
+                    u_ursprung[r] = mitte
+                if seite == "nord" and GIEBEL_BREITE[0] <= breite_g <= GIEBEL_BREITE[1]:
+                    neu = silos(mitte, aussen, gel)
+                    fuss = shapely.MultiPoint([t[k, :2] for t, _ in neu for k in range(3)]).convex_hull
+                    if fuss.intersects(grund_gruppe):
+                        zaehler["silos_verworfen"] += 1
+                        continue
+                    sammel[patch[g]]["silo"] += neu; zaehler["silogruppen"] += 1
         for art, ring, innen, gid in fl:
             ziel = sammel[patch[gid]]
             if art == "RoofSurface":
@@ -319,10 +338,9 @@ def main():
             elif art == "WallSurface":
                 blech = "blech_luefter" if id(ring) in luefter_ringe else \
                     "blech_stall" if typ[gid] == "halle_stall" else "blech_gewerbe"
-                for t, uv, w in waende(ring, innen, gid, typ[gid], boden, gel, info[gid]["grundriss"], zaehler, blech):
+                for t, uv, w in waende(ring, innen, gid, typ[gid], boden, gel, info[gid]["grundriss"], zaehler, blech,
+                                       u_ursprung.get(id(ring))):
                     ziel[w].append((t, uv))
-        for p, liste in sammel_patch_silo.items():
-            sammel[p]["silo"] += liste
         for p in PATCHES:
             s = sammel[p]
             if s["dach"]:
@@ -330,7 +348,8 @@ def main():
             for w, (obj, tex) in WAND.items():
                 if s[w]:
                     teile[p].append((f"{obj}_{dorf}", tex, [t for t, _ in s[w]], [u for _, u in s[w]]))
-    print("Wände umgedreht:", zaehler["umgedreht"], "| Lüftergiebel:", zaehler["luefter"], "| Silogruppen:", zaehler["silogruppen"])
+    print("Wände umgedreht:", zaehler["umgedreht"], "| Lüftergiebel:", zaehler["luefter"], "| Silogruppen:",
+          zaehler["silogruppen"], "| verworfen:", zaehler["silos_verworfen"])
     texturen = fs.alle()
     for w, (_, tex) in WAND.items():
         schreibe_dds(texturen[w], os.path.join(ZIEL, tex))
