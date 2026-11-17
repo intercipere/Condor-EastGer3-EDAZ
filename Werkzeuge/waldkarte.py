@@ -21,7 +21,7 @@ import gelaende as g
 
 PROJ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LGB = os.path.join(PROJ, "Daten", "LGB")
-LAND = r"C:/Spiele/Condor3/Landscapes/EastGermany3"
+from config import LAND
 PATCHES = [(40, 39), (39, 39)]
 ZELLE = g.PATCH / 512  # 11,25 m
 MIN_HOEHE = 3.0         # ab hier zählt Bewuchs als Baum

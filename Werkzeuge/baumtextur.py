@@ -18,7 +18,7 @@ from PIL import Image
 
 from dds_dxt1 import kodiere_bloecke
 
-ORIGINAL = r"C:/Spiele/Condor3/World/Textures/drevesa.dds"
+from config import GLOBAL_BAUMTEXTUR as ORIGINAL
 FUSS_NADEL = (346, 501)   # im Quadranten oben rechts
 HOEHE_PX = 470
 

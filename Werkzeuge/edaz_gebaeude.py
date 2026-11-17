@@ -32,7 +32,7 @@ from edaz_flaechen import ARBEIT, NAME, OSM, T, lies_apt, osm_elemente, utm, ist
 
 PROJ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LGB = os.path.join(PROJ, "Daten", "LGB")
-LAND = r"C:/Spiele/Condor3/Landscapes/EastGermany3"
+from config import LAND
 NS = {"gml": "http://www.opengis.net/gml", "bldg": "http://www.opengis.net/citygml/building/1.0"}
 DACH_PX, DACH_RES = 4096, 0.4
 SCHURZ = 1.5

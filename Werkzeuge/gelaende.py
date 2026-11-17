@@ -6,7 +6,8 @@ import rasterio.transform
 
 PROJ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 E0, N0, PATCH = 605160.0, 5558120.0, 5760.0
-WORK = r"C:/Spiele/Condor3/Landscapes/EastGermany3/Working/HeightMaps/22.5m"
+from config import LAND
+WORK = LAND + "/Working/HeightMaps/22.5m"
 
 
 def patch_mitte(col, row):

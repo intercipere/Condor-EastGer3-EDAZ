@@ -22,7 +22,7 @@ import c3d
 import gelaende as g
 
 PROJ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LAND = r"C:/Spiele/Condor3/Landscapes/EastGermany3"
+from config import LAND
 OSM = os.path.join(PROJ, "Daten", "OSM")
 ARBEIT = os.path.join(PROJ, "Daten", "Arbeit")
 NAME = "Schoenhagen"

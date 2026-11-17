@@ -17,7 +17,7 @@ from edaz_flaechen import GRID_N0, GRID_W, PATCHES, ZELLE, T, lade_raster, lies_
 
 Image.MAX_IMAGE_PIXELS = None
 PROJ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LAND = r"C:/Spiele/Condor3/Landscapes/EastGermany3"
+from config import LAND
 ZIEL = os.path.join(PROJ, "Daten", "Vorschau")
 TEX_PX = 4096  # je Patch, für die Vorschau reicht 1,4 m/px
 

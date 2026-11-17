@@ -13,7 +13,7 @@ from rasterio.merge import merge
 from PIL import Image
 
 PROJ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LAND = r"C:/Spiele/Condor3/Landscapes/EastGermany2"
+from config import LAND_ORIGINAL as LAND
 # Kalibrierung der Landschaft aus EastGermany2.trn: rechte untere Ecke, Spalten zählen nach Westen.
 E0, N0, PATCH = 605160.0, 5558120.0, 5760.0
 

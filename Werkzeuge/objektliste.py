@@ -18,7 +18,7 @@ from shapely.geometry import Point, Polygon
 import edaz_gebaeude as eg
 from edaz_flaechen import lade_raster, GRID_W, GRID_N0, ZELLE, osm_elemente, utm, ist_geschlossen
 
-LAND = r"C:/Spiele/Condor3/Landscapes/EastGermany3"
+from config import LAND
 DATEI = os.path.join(LAND, "EastGermany3.obj")
 SATZ = 152
 ERSETZT = {"hangarlongroa.c3d", "hangar2p.c3d", "hangar2.c3d", "kerken halle.c3d", "buisson1_ns.c3d", "buisson2_ns.c3d"}

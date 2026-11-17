@@ -14,7 +14,7 @@ import numpy as np
 
 from gelaende import patch_mitte
 
-LAND = r"C:/Spiele/Condor3/Landscapes/EastGermany3"
+from config import LAND
 WORK = os.path.join(LAND, "Working", "Autogen")
 
 
