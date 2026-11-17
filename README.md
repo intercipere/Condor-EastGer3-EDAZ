@@ -5,9 +5,10 @@ Arbeitsstand für eine erneuerte Condor-3-Landschaft rund um den Flugplatz EDAZ 
 ## Inhalt
 
 1. `ARBEITSABLAUF.md`: Voraussetzungen, Einrichtung, Reihenfolge der Skripte und Regeln fürs Mitarbeiten, auch für KI-Agents. Hier anfangen.
-2. `PROJEKT.md`: Ziel, Erkenntnisse, Dateiformate, Datenquellen und offene Punkte.
-3. `Werkzeuge/`: Python-Skripte für Luftbild-Texturen, Gelände, Wald, Flugplatzflächen, Gebäude (LoD2), Fassaden, Dörfer (Autogen) und die Baumtextur.
-4. `requirements.txt` (Python-Pakete) und `Vorschau.bat` (öffnet eine Blender-Vorschau der eingebauten Dateien).
+2. `TODO.md`: was noch zu tun ist, nach Themen sortiert.
+3. `PROJEKT.md`: Ziel, Erkenntnisse, Dateiformate, Datenquellen und offene Punkte.
+4. `Werkzeuge/`: Python-Skripte für Luftbild-Texturen, Gelände, Wald, Flugplatzflächen, Gebäude (LoD2), Fassaden, Dörfer (Autogen) und die Baumtextur.
+5. `requirements.txt` (Python-Pakete) und `Vorschau.bat` (öffnet eine Blender-Vorschau der eingebauten Dateien).
 
 Der Condor-Pfad steht in `Werkzeuge/config.py` (Standard `C:/Spiele/Condor3`, änderbar über die Umgebungsvariable `CONDOR_DIR`).
 
