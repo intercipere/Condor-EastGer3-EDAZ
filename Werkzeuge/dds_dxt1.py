@@ -5,6 +5,7 @@ Kodierung je 4x4-Block: Endpunkte entlang der Hauptachse der Blockfarben, Indize
 """
 import struct
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 import cv2
 import numpy as np
@@ -57,6 +58,7 @@ def schreibe_dds(img, pfad):
     h, w, _ = img.shape
     ebenen = []
     stufe = img
+    pool = ThreadPoolExecutor(4)
     while True:
         hh, ww = stufe.shape[:2]
         pad = stufe
@@ -65,13 +67,14 @@ def schreibe_dds(img, pfad):
             pad[:hh, :ww] = stufe
             pad[:, ww:] = pad[:, ww - 1:ww]
             pad[hh:, :] = pad[hh - 1:hh, :]
-        # In Streifen kodieren, damit 8192er-Texturen nicht mehrere GB Speicher brauchen.
-        ebenen.append(b"".join(kodiere_bloecke(pad[y:y + 256]) for y in range(0, pad.shape[0], 256)))
+        # In Streifen kodieren, damit 8192er-Texturen nicht mehrere GB Speicher brauchen; 4 Streifen gleichzeitig.
+        ebenen.append(b"".join(pool.map(kodiere_bloecke, (pad[y:y + 256] for y in range(0, pad.shape[0], 256)))))
         if hh == 1 and ww == 1:
             break
         stufe = cv2.resize(stufe, (max(1, ww // 2), max(1, hh // 2)), interpolation=cv2.INTER_AREA)
         if stufe.ndim == 2:
             stufe = stufe[:, :, None].repeat(3, 2)
+    pool.shutdown()
     kopf = struct.pack(
         "<4sIIIIIII44sIIIIIIIIIIIII",
         b"DDS ", 124, 0x1 | 0x2 | 0x4 | 0x1000 | 0x20000 | 0x80000, h, w, len(ebenen[0]), 0, len(ebenen),

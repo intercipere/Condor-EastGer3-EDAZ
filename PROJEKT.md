@@ -138,6 +138,11 @@ Stand Abend 17.11.2026:
 20. Offen: Ring aus scharfen Luftbildern und neuem Wald um EDAZ (3 × 3 Patches), dadurch rücken die Bildflug- und Patchkanten vom Platz weg.
 21. Offen: Weitere Flugplatzgebäude nach Fotos (Tower-Komplex in Kalksandstein, Hangar P1 mit Rolltoren).
 
+Stand 18.11.2026 (Ring um EDAZ):
+22. Die 7 Patches um den Kern (Spalten 41 bis 39, Reihen 40 bis 38) haben neue 8192-px-Texturen aus DOP20 und neue Waldkarten. Kern-Texturen und Kern-Waldkarten sind unverändert. Eingebaut mit `-hash`, in der `.fha` haben sich genau die 7 Ring-Zeilen geändert. Sicherung: `Backup\vor_ring_20261118_210636`. Noch nicht in Condor angesehen.
+23. Im Ring liegen drei Bildflüge (30.04.2024, 27.04.2025, 29.04.2025). Der Flug von 2025 im Südwesten ist dunstig. Deshalb gleicht `ring_textur.py` die Farben je Flug örtlich an die alte Textur an (Fenster 1,5 km) und zieht an den Kernkanten die Farbe des Kerns nach außen.
+24. Laub/Nadel läuft im Ring auf dem örtlich angeglichenen Bild. Die Schwelle 58 passt auch dort: Am Kern stimmen damit 96 % der Waldzellen mit den abgenommenen Karten überein (54: 90 %, 62: 92 %).
+
 ## Wolken und Shader (17.11.2026)
 
 Stand: untersucht und getestet, noch nichts geändert. Die Wolken-Variation ist vorerst zurückgestellt.

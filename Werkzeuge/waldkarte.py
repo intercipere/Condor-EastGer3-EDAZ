@@ -58,25 +58,43 @@ def ausschnitt(arr, w, n, res, west, nord, groesse):
     return a
 
 
-def gebaeude_maske(west, nord, groesse):
+def gebaeude_maske(west, nord, groesse, lgb_ordner=(LGB,)):
     """1-m-Maske aller LoD2-Grundrisse (um 2 m vergrößert), Nord oben."""
     from lxml import etree
     import re
-    ns = {"gml": "http://www.opengis.net/gml", "bldg": "http://www.opengis.net/citygml/building/1.0"}
     k = int(round(groesse))
     maske = np.zeros((k, k), np.uint8)
-    for z in glob.glob(os.path.join(LGB, "lod2", "*.zip")):
+    for z in [z for o in lgb_ordner for z in glob.glob(os.path.join(o, "lod2", "*.zip"))]:
         ke, kn = map(int, re.findall(r"_33(\d+)-(\d+)", z)[0])
         if ke * 1000 > west + groesse or (ke + 1) * 1000 < west or kn * 1000 > nord or (kn + 1) * 1000 < nord - groesse:
             continue
         with zipfile.ZipFile(z) as zf:
             baum = etree.fromstring(zf.read([x for x in zf.namelist() if x.endswith(".gml")][0]))
-        for gs in baum.iter("{%s}GroundSurface" % ns["bldg"]):
-            for p in gs.iter("{%s}posList" % ns["gml"]):
-                xy = np.array(p.text.split(), float).reshape(-1, 3)[:, :2]
-                pts = np.c_[xy[:, 0] - west, nord - xy[:, 1]].round().astype(np.int32)
-                cv2.fillPoly(maske, [pts], 1)
+        # Die LGB-Dateien nutzen CityGML 1.0 und 2.0. Ohne GroundSurface ergibt das Dach den Grundriss.
+        for haus in baum.iter("{*}Building"):
+            for gs in list(haus.iter("{*}GroundSurface")) or list(haus.iter("{*}RoofSurface")):
+                for p in gs.iter("{*}posList"):
+                    xy = np.array(p.text.split(), float).reshape(-1, 3)[:, :2]
+                    pts = np.c_[xy[:, 0] - west, nord - xy[:, 1]].round().astype(np.int32)
+                    cv2.fillPoly(maske, [pts], 1)
     return cv2.dilate(maske, np.ones((5, 5), np.uint8)).astype(bool)
+
+
+def klassifiziere(hoehe, foto, gebaeude, hell_nadel=HELL_NADEL):
+    """Waldklassen je Zelle (512 x 512, Nord oben) aus Baumhöhe, Luftbild und Gebäudemaske, alle mit 1 m pro Pixel."""
+    hell = foto.mean(2)
+    gruen = foto[..., 1] - (foto[..., 0] + foto[..., 2]) / 2
+    baum = (hoehe >= MIN_HOEHE) & (gruen > -6) & ~gebaeude  # Gebäude aus LoD2 raus, Masten u. Ä. sind grau
+    anteil = cv2.resize(baum.astype(np.float32), (512, 512), interpolation=cv2.INTER_AREA)
+    summe_hell = cv2.resize(np.where(baum, hell, 0).astype(np.float32), (512, 512), interpolation=cv2.INTER_AREA)
+    hell_zelle = summe_hell / np.maximum(anteil, 1e-6)
+    bild = np.zeros((512, 512), np.uint8)
+    wald = anteil >= MIN_ANTEIL
+    bild[wald & (hell_zelle <= hell_nadel)] = 1
+    bild[wald & (hell_zelle > hell_nadel)] = 2
+    # Einzelne abweichende Zellen in Mischbeständen glätten (3x3-Mehrheit innerhalb des Waldes)
+    geglaettet = cv2.medianBlur(bild, 3)
+    return np.where(wald, np.where(geglaettet > 0, geglaettet, bild), 0).astype(np.uint8)
 
 
 def main():
@@ -93,21 +111,9 @@ def main():
         west, nord = ec - g.PATCH / 2, nc + g.PATCH / 2
         hoehe = ausschnitt(bdom, bw, bn, bres, west, nord, g.PATCH) - ausschnitt(dgm, dw, dn, dres, west, nord, g.PATCH)
         foto = cv2.resize(mosaik[:, k * 8192:(k + 1) * 8192], hoehe.shape[::-1], interpolation=cv2.INTER_AREA).astype(np.float32)
-        hell = foto.mean(2)
-        gruen = foto[..., 1] - (foto[..., 0] + foto[..., 2]) / 2
         gebaeude = gebaeude_maske(west, nord, g.PATCH)
-        baum = (hoehe >= MIN_HOEHE) & (gruen > -6) & ~gebaeude  # Gebäude aus LoD2 raus, Masten u. Ä. sind grau
         print(f"{c:02d}{r:02d}: Gebäudefläche {gebaeude.mean():.2%}")
-        anteil = cv2.resize(baum.astype(np.float32), (512, 512), interpolation=cv2.INTER_AREA)
-        summe_hell = cv2.resize(np.where(baum, hell, 0).astype(np.float32), (512, 512), interpolation=cv2.INTER_AREA)
-        hell_zelle = summe_hell / np.maximum(anteil, 1e-6)
-        bild = np.zeros((512, 512), np.uint8)
-        wald = anteil >= MIN_ANTEIL
-        bild[wald & (hell_zelle <= HELL_NADEL)] = 1
-        bild[wald & (hell_zelle > HELL_NADEL)] = 2
-        # Einzelne abweichende Zellen in Mischbeständen glätten (3x3-Mehrheit innerhalb des Waldes)
-        geglaettet = cv2.medianBlur(bild, 3)
-        bild = np.where(wald, np.where(geglaettet > 0, geglaettet, bild), 0).astype(np.uint8)
+        bild = klassifiziere(hoehe, foto, gebaeude)
         datei = np.ascontiguousarray(bild[::-1, ::-1].T)
         pfad = os.path.join(LAND, "ForestMaps", f"{c:02d}{r:02d}.for")
         alt = np.fromfile(pfad, np.uint8)

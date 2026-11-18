@@ -40,7 +40,7 @@ Wunschliste für die Landschaft rund um EDAZ, vor allem Dinge, die man aus dem S
 
 ## 5. Karte erweitern
 
-1. Ring aus scharfen Luftbildern und neuem Wald um EDAZ (3 × 3 Patches), damit die Bildflug- und Patchkanten vom Platz wegrücken.
+1. Ring aus scharfen Luftbildern und neuem Wald um EDAZ (3 × 3 Patches): gebaut und eingebaut am 18.11.2026, in Condor noch ansehen.
 2. Datenaufbereitung automatisieren (laden, nach UTM umrechnen, Farben angleichen, Patches erzeugen), dann Kachel für Kachel erneuern. Die Patches stehen bisher fest in den Skripten.
 
 ## 6. Ideen, bisher zurückgestellt
